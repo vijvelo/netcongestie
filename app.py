@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
 from simulation import Treatment, FilterStreet
 from controller import SimpleController
 
@@ -33,28 +34,28 @@ results.index = results['time'].apply(lambda x: pd.Timestamp(x, unit='min'))
 results['total_power_15m'] = results.resample('15min')['total_power'].transform('mean')
 
 st.header('Reservoir volume')
-st.line_chart(results[['reservoir_volume', 'backwash_buffer']])
+st.plotly_chart(px.line(results, x='time', y=['reservoir_volume', 'backwash_buffer']))
 
 st.header('Debieten')
-st.line_chart(results[['production_flow', 'distribution_flow', 'backwash_flow']])
+st.plotly_chart(px.line(results, x='time', y=['production_flow', 'distribution_flow', 'backwash_flow']))
 
 st.header('Energieverbruik')
-st.area_chart(results[['production_power', 'distribution_power', 'baseload_power', 'backwash_power']], stack=True)
+st.plotly_chart(px.area(results, x='time', y=['production_power', 'distribution_power', 'baseload_power', 'backwash_power']))
 
 st.header('Kwartierwaarden')
-st.line_chart(results[['total_power', 'total_power_15m']])
+st.plotly_chart(px.line(results, x='time', y=['total_power', 'total_power_15m']))
 
 street_results = pd.DataFrame(filters[0].results)
 street_volumes = street_results['filter_volumes'].apply(pd.Series)
-street_volumes.index = results.index
 street_volumes.columns = ['F{}'.format(i) for i in range(len(street_volumes.columns))]
+street_volumes['time'] = results.index
 street_status = street_results['filter_status'].apply(pd.Series)
-street_status.index = results.index
 street_status.columns = ['F{}'.format(i) for i in range(len(street_status.columns))]
+street_status['time'] = results.index
 
 st.header('Loopvolumes')
-st.line_chart(street_volumes)
-st.line_chart(street_status)
+st.plotly_chart(px.line(street_volumes, x='time', y=street_volumes.columns, markers=False))
+st.plotly_chart(px.line(street_status, x='time', y=street_status.columns, markers=False))
 
 
 
